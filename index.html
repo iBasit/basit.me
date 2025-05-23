@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Basit.me - AI Engineer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      background: #0b0b0f;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: white;
+      cursor: none;
+    }
+
+    /* Custom cursor */
+    .cursor {
+      position: fixed;
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle, rgba(116, 75, 255, 0.8) 0%, rgba(116, 75, 255, 0.1) 70%, transparent 100%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.1s ease;
+      mix-blend-mode: screen;
+    }
+
+    #canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      padding-left: 8vw;
+      max-width: 50vw;
+    }
+
+    .main-title {
+      font-size: clamp(3rem, 8vw, 6rem);
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 50%, #c7d2fe 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: textGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes textGlow {
+      0% { text-shadow: 0 0 20px rgba(116, 75, 255, 0.1); }
+      100% { text-shadow: 0 0 40px rgba(116, 75, 255, 0.3); }
+    }
+
+    .subtitle {
+      font-size: clamp(1.2rem, 3vw, 2rem);
+      color: #9ca3af;
+      margin-bottom: 3rem;
+      font-weight: 400;
+      opacity: 0.9;
+    }
+
+    .cta-button {
+      padding: 1rem 2.5rem;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 
+        0 4px 15px rgba(99, 102, 241, 0.2),
+        0 0 0 1px rgba(99, 102, 241, 0.1);
+    }
+
+    .cta-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 
+        0 8px 25px rgba(99, 102, 241, 0.3),
+        0 0 0 1px rgba(99, 102, 241, 0.2),
+        0 0 20px rgba(139, 92, 246, 0.3);
+    }
+
+    .cta-button:hover::before {
+      left: 100%;
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 2rem;
+      right: 2rem;
+      font-size: 0.9rem;
+      color: #6b7280;
+      z-index: 2;
+      opacity: 0.7;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      body {
+        cursor: auto;
+      }
+      
+      .cursor {
+        display: none;
+      }
+      
+      .content {
+        align-items: center;
+        text-align: center;
+        padding: 2rem;
+        max-width: 90vw;
+      }
+      
+      .main-title {
+        font-size: 2.5rem;
+      }
+      
+      .subtitle {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+      }
+      
+      .footer {
+        bottom: 1rem;
+        right: 1rem;
+        font-size: 0.8rem;
+      }
+    }
+
+    /* Loading animation */
+    .loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #0b0b0f;
+      z-index: 10000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 0.5s ease;
+    }
+
+    .loading.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 2px solid rgba(116, 75, 255, 0.1);
+      border-top: 2px solid #744bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="loading" id="loading">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <div class="cursor" id="cursor"></div>
+  
+  <canvas id="canvas"></canvas>
+  
+  <div class="content">
+    <h1 class="main-title">Hi, I'm Basit.</h1>
+    <p class="subtitle">I build AI-powered things.</p>
+    <button class="cta-button" onclick="window.open('mailto:i@basit.me', '_blank')">
+      Hire me
+    </button>
+  </div>
+  
+  <div class="footer">
+    Built by Basit
+  </div>
+
+  <script>
+    // Neural Network Animation
+    class NeuralNetwork {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.nodes = [];
+        this.connections = [];
+        this.mouseX = 0;
+        this.mouseY = 0;
+        this.time = 0;
+        
+        this.resize();
+        this.createNetwork();
+        this.setupEventListeners();
+        this.animate();
+      }
+
+      resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.centerX = this.canvas.width * 0.7;
+        this.centerY = this.canvas.height * 0.5;
+      }
+
+      createNetwork() {
+        this.nodes = [];
+        this.connections = [];
+        
+        const nodeCount = 60;
+        const layers = 4;
+        const spiralArms = 3;
+        
+        // Create spiral pattern nodes
+        for (let i = 0; i < nodeCount; i++) {
+          const progress = i / nodeCount;
+          const spiral = progress * spiralArms * Math.PI * 2;
+          const radius = 100 + progress * 300;
+          
+          const x = this.centerX + Math.cos(spiral) * radius;
+          const y = this.centerY + Math.sin(spiral) * radius;
+          
+          this.nodes.push({
+            id: i,
+            x: x,
+            y: y,
+            originalX: x,
+            originalY: y,
+            radius: 2 + Math.random() * 4,
+            color: this.getNodeColor(progress),
+            pulsePhase: Math.random() * Math.PI * 2,
+            energy: Math.random(),
+            connections: []
+          });
+        }
+
+        // Create flowing connections
+        this.nodes.forEach((node, i) => {
+          const connectionCount = 3 + Math.floor(Math.random() * 3);
+          for (let j = 0; j < connectionCount; j++) {
+            const targetIndex = (i + 1 + j) % this.nodes.length;
+            const target = this.nodes[targetIndex];
+            
+            this.connections.push({
+              from: node,
+              to: target,
+              strength: 0.1 + Math.random() * 0.3,
+              pulseOffset: Math.random() * Math.PI * 2,
+              flowSpeed: 0.5 + Math.random() * 1.5
+            });
+          }
+        });
+      }
+
+      getNodeColor(progress) {
+        const colors = [
+          { r: 116, g: 75, b: 255 },   // #744bff
+          { r: 99, g: 102, b: 241 },   // #6366f1  
+          { r: 139, g: 92, b: 246 },   // #8b5cf6
+          { r: 168, g: 85, b: 247 }    // #a855f7
+        ];
+        
+        const index = Math.floor(progress * colors.length);
+        return colors[Math.min(index, colors.length - 1)];
+      }
+
+      setupEventListeners() {
+        window.addEventListener('resize', () => this.resize());
+        
+        document.addEventListener('mousemove', (e) => {
+          this.mouseX = e.clientX;
+          this.mouseY = e.clientY;
+          
+          // Update custom cursor
+          const cursor = document.getElementById('cursor');
+          cursor.style.left = e.clientX - 10 + 'px';
+          cursor.style.top = e.clientY - 10 + 'px';
+        });
+      }
+
+      animate() {
+        this.time += 0.016;
+        
+        this.ctx.fillStyle = '#0b0b0f';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        this.updateNodes();
+        this.drawConnections();
+        this.drawNodes();
+        
+        requestAnimationFrame(() => this.animate());
+      }
+
+      updateNodes() {
+        this.nodes.forEach(node => {
+          // Gentle floating motion
+          const floatX = Math.sin(this.time * 0.5 + node.pulsePhase) * 8;
+          const floatY = Math.cos(this.time * 0.3 + node.pulsePhase) * 6;
+          
+          // Mouse interaction
+          const mouseDistance = Math.hypot(this.mouseX - node.originalX, this.mouseY - node.originalY);
+          const mouseForce = Math.max(0, 100 - mouseDistance) / 100;
+          const mouseX = (this.mouseX - node.originalX) * mouseForce * 0.3;
+          const mouseY = (this.mouseY - node.originalY) * mouseForce * 0.3;
+          
+          node.x = node.originalX + floatX + mouseX;
+          node.y = node.originalY + floatY + mouseY;
+          
+          // Energy pulse
+          node.energy = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(this.time * 2 + node.pulsePhase));
+        });
+      }
+
+      drawConnections() {
+        this.connections.forEach(connection => {
+          const { from, to, strength, pulseOffset, flowSpeed } = connection;
+          
+          // Create flowing energy effect
+          const flow = (this.time * flowSpeed + pulseOffset) % (Math.PI * 2);
+          const alpha = 0.1 + strength * from.energy * to.energy;
+          
+          // Main connection line
+          this.ctx.beginPath();
+          this.ctx.moveTo(from.x, from.y);
+          this.ctx.lineTo(to.x, to.y);
+          this.ctx.strokeStyle = `rgba(${from.color.r}, ${from.color.g}, ${from.color.b}, ${alpha})`;
+          this.ctx.lineWidth = 1;
+          this.ctx.stroke();
+          
+          // Flowing pulse
+          const pulsePos = 0.5 + 0.3 * Math.sin(flow);
+          const pulseX = from.x + (to.x - from.x) * pulsePos;
+          const pulseY = from.y + (to.y - from.y) * pulsePos;
+          
+          this.ctx.beginPath();
+          this.ctx.arc(pulseX, pulseY, 2, 0, Math.PI * 2);
+          this.ctx.fillStyle = `rgba(${from.color.r}, ${from.color.g}, ${from.color.b}, ${alpha * 2})`;
+          this.ctx.shadowBlur = 8;
+          this.ctx.shadowColor = `rgb(${from.color.r}, ${from.color.g}, ${from.color.b})`;
+          this.ctx.fill();
+          this.ctx.shadowBlur = 0;
+        });
+      }
+
+      drawNodes() {
+        this.nodes.forEach(node => {
+          const glowIntensity = node.energy;
+          
+          // Outer glow
+          this.ctx.beginPath();
+          this.ctx.arc(node.x, node.y, node.radius * 2, 0, Math.PI * 2);
+          this.ctx.fillStyle = `rgba(${node.color.r}, ${node.color.g}, ${node.color.b}, ${glowIntensity * 0.1})`;
+          this.ctx.fill();
+          
+          // Main node
+          this.ctx.beginPath();
+          this.ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+          this.ctx.fillStyle = `rgba(${node.color.r}, ${node.color.g}, ${node.color.b}, ${0.7 + glowIntensity * 0.3})`;
+          this.ctx.shadowBlur = 12 * glowIntensity;
+          this.ctx.shadowColor = `rgb(${node.color.r}, ${node.color.g}, ${node.color.b})`;
+          this.ctx.fill();
+          this.ctx.shadowBlur = 0;
+          
+          // Core highlight
+          this.ctx.beginPath();
+          this.ctx.arc(node.x - node.radius * 0.3, node.y - node.radius * 0.3, node.radius * 0.4, 0, Math.PI * 2);
+          this.ctx.fillStyle = `rgba(255, 255, 255, ${glowIntensity * 0.5})`;
+          this.ctx.fill();
+        });
+      }
+    }
+
+    // Initialize
+    window.addEventListener('load', () => {
+      const canvas = document.getElementById('canvas');
+      new NeuralNetwork(canvas);
+      
+      // Hide loading screen
+      setTimeout(() => {
+        document.getElementById('loading').classList.add('fade-out');
+      }, 1000);
+    });
+
+    // Performance optimization for mobile
+    if (window.innerWidth <= 768) {
+      document.body.style.cursor = 'auto';
+      document.getElementById('cursor').style.display = 'none';
+    }
+  </script>
+</body>
+</html> 
