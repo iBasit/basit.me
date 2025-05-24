@@ -311,6 +311,7 @@
       setupEventListeners() {
         window.addEventListener('resize', () => this.resize());
         
+        // Mouse events for desktop
         document.addEventListener('mousemove', (e) => {
           this.mouseX = e.clientX;
           this.mouseY = e.clientY;
@@ -320,6 +321,32 @@
           cursor.style.left = e.clientX - 10 + 'px';
           cursor.style.top = e.clientY - 10 + 'px';
         });
+        
+        // Touch events for mobile
+        document.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          if (e.touches.length > 0) {
+            this.mouseX = e.touches[0].clientX;
+            this.mouseY = e.touches[0].clientY;
+          }
+        }, { passive: false });
+        
+        document.addEventListener('touchmove', (e) => {
+          e.preventDefault();
+          if (e.touches.length > 0) {
+            this.mouseX = e.touches[0].clientX;
+            this.mouseY = e.touches[0].clientY;
+          }
+        }, { passive: false });
+        
+        document.addEventListener('touchend', (e) => {
+          e.preventDefault();
+          // Keep the last touch position for a moment before resetting
+          setTimeout(() => {
+            this.mouseX = -1000;
+            this.mouseY = -1000;
+          }, 500);
+        }, { passive: false });
       }
 
       animate() {
